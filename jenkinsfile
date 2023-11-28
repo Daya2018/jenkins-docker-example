@@ -1,0 +1,34 @@
+pipeline{
+    agent any
+    tools {
+        maven 'MAVEN'
+    }
+    stages {
+        stage('Build Maven') {
+            steps{
+                    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'Dayagit', url: 'https://github.com/Daya2018/jenkins-docker-example.git']])
+                    sh "mvn -Dmaven.test.failure.ignore=true clean package"
+            }
+        }
+    
+        stage('Build Docker Image') {
+            steps{
+                script{
+                    sh 'docker build -t daya1992/my-app .'
+                }
+            }
+        }
+    
+         stage('Deploy Docker Image') {
+             steps {
+                 script {
+                     withCredentials([string(credentialsId: 'Docker_hub', variable: 'dockerhubpwd')])  {
+                         sh 'docker login --username daya1992 -p ${dockerhubpwd}'
+}
+                         sh 'docker push daya1992/my-app'
+                 }
+             }
+         }
+    }
+    
+}
